@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SaaS Pegawai - Client Frontend (Fetch API)</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
@@ -11,6 +12,8 @@
         .form-card { margin-bottom: 25px; padding: 15px; border: 1px solid #ccc; width: 400px; border-radius: 5px; }
         .pesan-sukses { color: green; font-weight: bold; }
         .pesan-error { color: red; font-weight: bold; }
+        .btn-hapus { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .btn-hapus:hover { background-color: #cc0000; }
     </style>
 </head>
 <body>
@@ -19,13 +22,13 @@
 
     <!-- Form Input Data Pegawai -->
     <div class="form-card">
-        <h3>Form Tambah Pegawai Via API</h3>
+        <h3 id="formTitle">Form Tambah Pegawai Via API</h3>
         <form id="formPegawai">
             NIP: <br>
             <input type="text" id="nip" required><br><br>
 
             Nama Pegawai: <br>
-            <input type="text" id="nama_pegawai"><br><br>
+            <input type="text" id="nama_pegawai" required><br><br>
 
             ID Jabatan: <br>
             <input type="number" id="id_jabatan" required><br><br>
@@ -33,7 +36,7 @@
             Tenant ID: <br>
             <input type="text" id="tenant_id" required><br><br>
 
-            <button type="submit">Kirim Data via Fetch API</button>
+            <button type="submit" id="btnSubmit">Kirim Data via Fetch API</button>
         </form>
         <p id="pesanRespon"></p>
     </div>
@@ -48,6 +51,7 @@
                 <th>Nama Pegawai</th>
                 <th>ID Jabatan</th>
                 <th>Tenant ID</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody id="tabelPegawai">

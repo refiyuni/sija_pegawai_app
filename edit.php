@@ -1,51 +1,38 @@
 <?php
-include "koneksi.php";
+header('Content-Type: application/json');
+require_once 'koneksi.php';
 
-$nip_lama = $_GET['nip'];
-$result   = mysqli_query($conn, "SELECT * FROM pegawai WHERE nip='$nip_lama'");
-$row      = mysqli_fetch_assoc($result);
+$input = json_decode(file_get_contents('php://input'), true);
 
-if (isset($_POST['update'])) {
-    $nama_pegawai = $_POST['nama_pegawai'];
-    $id_jabatan   = $_POST['id_jabatan'];
-    $tenant_id    = $_POST['tenant_id'];
+$nip        = $input['nip'] ?? '';
+$nama       = $input['nama'] ?? $input['nama_pegawai'] ?? '';
+$id_jabatan = $input['id_jabatan'] ?? null;
+$tenant_id  = $input['tenant_id'] ?? $input['email'] ?? '';
 
-    $update_query = "UPDATE pegawai SET 
-                        nama_pegawai='$nama_pegawai', 
-                        id_jabatan='$id_jabatan', 
-                        tenant_id='$tenant_id' 
-                     WHERE nip='$nip_lama'";
+if (!empty($nip) && !empty($nama)) {
+    try {
+        $stmt = $pdo->prepare("UPDATE pegawai SET nama = ?, id_jabatan = ?, email = ? WHERE nip = ?");
+        $stmt->execute([$nama, $id_jabatan, $tenant_id, $nip]);
 
-    if (mysqli_query($conn, $update_query)) {
-        header("Location: index.php");
-    } else {
-        echo "Gagal memperbarui data: " . mysqli_error($conn);
+        echo json_encode([
+            "success" => true,
+            "status" => "success",
+            "message" => "Data pegawai berhasil diperbarui!"
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "status" => "error",
+            "message" => "Gagal mengubah data: " . $e->getMessage()
+        ]);
     }
+} else {
+    http_response_code(400);
+    echo json_encode([
+        "success" => false,
+        "status" => "error",
+        "message" => "NIP atau Data tidak lengkap!"
+    ]);
 }
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Pegawai</title>
-</head>
-<body>
-    <h2>Form Edit Data Pegawai</h2>
-    <form method="POST">
-        NIP (Primary Key - Tidak diubah): <br>
-        <input type="text" name="nip" value="<?= $row['nip']; ?>" disabled><br><br>
-
-        Nama Pegawai: <br>
-        <input type="text" name="nama_pegawai" value="<?= $row['nama_pegawai']; ?>" required><br><br>
-
-        ID Jabatan: <br>
-        <input type="number" name="id_jabatan" value="<?= $row['id_jabatan']; ?>" required><br><br>
-
-        Tenant ID: <br>
-        <input type="text" name="tenant_id" value="<?= $row['tenant_id']; ?>" required><br><br>
-
-        <input type="submit" name="update" value="Simpan Perubahan">
-        <a href="index.php">Batal</a>
-    </form>
-</body>
-</html>
