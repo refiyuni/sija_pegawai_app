@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadPegawai();
 });
 
-// Fungsi Read (Membaca Data Pegawai)
+// Load Data
 function loadPegawai() {
     fetch('api_read.php')
         .then(res => res.json())
@@ -29,6 +29,7 @@ function loadPegawai() {
                     <td>${jabatanVal}</td>
                     <td>${tenantVal}</td>
                     <td>
+                        <button class="btn-edit" onclick="setEditForm('${nipVal}', '${namaVal}', '${jabatanVal}', '${tenantVal}')">Edit</button>
                         <button class="btn-hapus" onclick="hapusPegawai('${nipVal}')">Hapus</button>
                     </td>
                 </tr>`;
@@ -38,25 +39,50 @@ function loadPegawai() {
         .catch(err => console.error('Gagal memuat data:', err));
 }
 
-// Fungsi Create (Tambah Data)
+// Persiapan Form Edit
+function setEditForm(nip, nama, id_jabatan, tenant_id) {
+    document.getElementById('nip').value = nip;
+    document.getElementById('nip').readOnly = true; // NIP tidak boleh diubah saat edit
+    document.getElementById('nama_pegawai').value = nama;
+    document.getElementById('id_jabatan').value = id_jabatan;
+    document.getElementById('tenant_id').value = tenant_id;
+
+    document.getElementById('is_edit').value = "1";
+    document.getElementById('formTitle').innerText = "Form Edit Pegawai";
+    document.getElementById('btnSubmit').innerText = "Simpan Perubahan";
+    document.getElementById('btnBatal').style.display = "inline-block";
+}
+
+// Reset Form ke Mode Tambah
+function resetForm() {
+    document.getElementById('formPegawai').reset();
+    document.getElementById('nip').readOnly = false;
+    document.getElementById('is_edit').value = "0";
+    document.getElementById('formTitle').innerText = "Form Tambah Pegawai Via API";
+    document.getElementById('btnSubmit').innerText = "Kirim Data via Fetch API";
+    document.getElementById('btnBatal').style.display = "none";
+}
+
+// Submit Form (Tambah / Edit)
 document.getElementById('formPegawai')?.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    let nipInput = document.getElementById('nip').value;
-    let namaInput = document.getElementById('nama_pegawai').value;
-    let jabatanInput = document.getElementById('id_jabatan').value;
-    let tenantInput = document.getElementById('tenant_id').value;
+    let isEdit = document.getElementById('is_edit').value === "1";
+    let targetApi = isEdit ? 'edit.php' : 'api_create.php';
+
+    let payload = {
+        nip: document.getElementById('nip').value,
+        nama: document.getElementById('nama_pegawai').value,
+        id_jabatan: document.getElementById('id_jabatan').value,
+        tenant_id: document.getElementById('tenant_id').value
+    };
+
     let pesanBox = document.getElementById('pesanRespon');
 
-    fetch('api_create.php', {
+    fetch(targetApi, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            nip: nipInput,
-            nama: namaInput,
-            id_jabatan: jabatanInput,
-            tenant_id: tenantInput
-        })
+        body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(res => {
@@ -66,19 +92,19 @@ document.getElementById('formPegawai')?.addEventListener('submit', function(e) {
         }
 
         if (res.success || res.status === 'success') {
-            document.getElementById('formPegawai').reset();
+            resetForm();
             loadPegawai();
         }
     })
     .catch(err => {
         if (pesanBox) {
             pesanBox.className = 'pesan-error';
-            pesanBox.innerText = 'Gagal mengirim data ke server.';
+            pesanBox.innerText = 'Gagal memproses data.';
         }
     });
 });
 
-// Fungsi Delete (Hapus Data)
+// Hapus Data
 function hapusPegawai(nip) {
     if (!nip) return;
     if (confirm(`Yakin ingin menghapus pegawai dengan NIP ${nip}?`)) {

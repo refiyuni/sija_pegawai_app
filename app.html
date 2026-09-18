@@ -14,6 +14,8 @@
         .pesan-error { color: red; font-weight: bold; }
         .btn-hapus { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
         .btn-hapus:hover { background-color: #cc0000; }
+        .btn-edit { background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px; }
+        .btn-edit:hover { background-color: #e0a800; }
     </style>
 </head>
 <body>
@@ -24,6 +26,8 @@
     <div class="form-card">
         <h3 id="formTitle">Form Tambah Pegawai Via API</h3>
         <form id="formPegawai">
+            <input type="hidden" id="is_edit" value="0">
+
             NIP: <br>
             <input type="text" id="nip" required><br><br>
 
@@ -37,6 +41,7 @@
             <input type="text" id="tenant_id" required><br><br>
 
             <button type="submit" id="btnSubmit">Kirim Data via Fetch API</button>
+            <button type="button" id="btnBatal" style="display:none;" onclick="resetForm()">Batal Edit</button>
         </form>
         <p id="pesanRespon"></p>
     </div>
@@ -55,7 +60,7 @@
             </tr>
         </thead>
         <tbody id="tabelPegawai">
-            <!-- Data dari Fetch API akan dimasukkan di sini oleh JavaScript -->
+            <!-- Data dari Fetch API -->
         </tbody>
     </table>
 
