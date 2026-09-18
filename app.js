@@ -1,88 +1,58 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Jalankan fungsi muat data saat halaman selesai di-load
-    muatDataPegawai();
-
-    // 2. Pasang event listener untuk cegat submit form HTML
-    const form = document.getElementById("formPegawai");
-    form.addEventListener("submit", tambahDataPegawai);
+    loadPegawai();
 });
 
-// FUNGSI 1: MEMBACA DATA DARI API (GET METHOD)
-function muatDataPegawai() {
-    fetch("api_read.php")
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("HTTP Status Error: " + response.status);
-            }
-            return response.json();
+// Fungsi untuk membaca data pegawai
+function loadPegawai() {
+    fetch('api_read.php')
+        .then(res => res.json())
+        .then(data => {
+            let tbody = document.querySelector('tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            data.forEach((item, index) => {
+                let row = `<tr>
+                    <td>${index + 1}</td>
+                    <td>${item.nip || ''}</td>
+                    <td>${item.nama || item.nama_pegawai || ''}</td>
+                    <td>${item.id_jabatan || ''}</td>
+                    <td>${item.email || item.tenant_id || ''}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
         })
-        .then(result => {
-            if (result.status === "success") {
-                renderTabel(result.data);
-            }
-        })
-        .catch(error => console.error("Error Fetch Read:", error));
+        .catch(err => console.error('Gagal memuat data:', err));
 }
 
-// FUNGSI UNTUK MERENDER ISI TABEL HTML (DOM MANIPULATION)
-function renderTabel(dataPegawai) {
-    const tbody = document.getElementById("tabelPegawai");
-    tbody.innerHTML = ""; // Bersihkan tabel lama
+// Fungsi untuk menambah data pegawai
+document.querySelector('form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    let nip = document.querySelector('input[name="nip"]')?.value || document.querySelectorAll('input')[0].value;
+    let nama = document.querySelector('input[name="nama"]')?.value || document.querySelectorAll('input')[1].value;
+    let id_jabatan = document.querySelector('input[name="id_jabatan"]')?.value || document.querySelectorAll('input')[2].value;
+    let tenant_id = document.querySelector('input[name="tenant_id"]')?.value || document.querySelectorAll('input')[3].value;
 
-    let no = 1;
-    dataPegawai.forEach(pegawai => {
-        const row = `
-            <tr>
-                <td>${no++}</td>
-                <td>${pegawai.nip}</td>
-                <td>${pegawai.nama_pegawai}</td>
-                <td>${pegawai.id_jabatan}</td>
-                <td>${pegawai.tenant_id}</td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
-}
-
-// FUNGSI 2: MENGIRIM DATA KE API (POST METHOD JSON)
-function tambahDataPegawai(event) {
-    event.preventDefault(); // Mencegah reload/refresh halaman browser
-
-    const elPesan = document.getElementById("pesanRespon");
-    elPesan.innerText = "";
-
-    // Menyusun objek payload masukan dari form
-    const payload = {
-        nip: document.getElementById("nip").value,
-        nama_pegawai: document.getElementById("nama_pegawai").value,
-        id_jabatan: parseInt(document.getElementById("id_jabatan").value),
-        tenant_id: document.getElementById("tenant_id").value
-    };
-
-    // Mengirim payload JSON ke endpoint api_create.php
-    fetch("api_create.php", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+    fetch('api_create.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            nip: nip,
+            nama: nama,
+            id_jabatan: id_jabatan,
+            tenant_id: tenant_id
+        })
     })
-    .then(async response => {
-        const result = await response.json();
-        return { status_code: response.status, body: result };
-    })
+    .then(res => res.json())
     .then(res => {
-        if (res.status_code === 201) {
-            // Berhasil dibuat (HTTP 201 Created)
-            elPesan.className = "pesan-sukses";
-            elPesan.innerText = res.body.message;
-            document.getElementById("formPegawai").reset(); // Clear isi form
-            muatDataPegawai(); // Auto-refresh isi tabel tanpa reload halaman
-        } else {
-            // Gagal / Bad Request (HTTP 400 atau 500)
-            elPesan.className = "pesan-error";
-            elPesan.innerText = "Error (" + res.status_code + "): " + res.body.message;
+        let statusDiv = document.getElementById('status') || document.querySelector('.error') || document.createElement('div');
+        statusDiv.style.color = res.success ? 'green' : 'red';
+        statusDiv.innerText = res.message;
+
+        if (res.success || res.status === 'success') {
+            loadPegawai(); // Auto refresh tabel setelah simpan
         }
     })
-    .catch(error => console.error("Error Fetch POST:", error));
-}
+    .catch(err => console.error('Error:', err));
+});
