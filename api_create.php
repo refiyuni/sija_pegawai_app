@@ -11,15 +11,26 @@ $tenant_id  = $input['tenant_id'] ?? '';
 
 if (!empty($nip) && !empty($nama)) {
     try {
-        // Menggunakan kolom 'nama' sesuai tabel PostgreSQL Aiven
         $stmt = $pdo->prepare("INSERT INTO pegawai (nip, nama, id_jabatan, email) VALUES (?, ?, ?, ?)");
         $stmt->execute([$nip, $nama, $id_jabatan, $tenant_id]);
         
-        echo json_encode(["status" => "success", "message" => "Data berhasil disimpan!"]);
+        // Return respon sukses murni
+        echo json_encode([
+            "success" => true,
+            "message" => "Data berhasil disimpan!"
+        ]);
     } catch (PDOException $e) {
-        echo json_encode(["status" => "error", "message" => "Gagal Simpan: " . $e->getMessage()]);
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Gagal Simpan: " . $e->getMessage()
+        ]);
     }
 } else {
-    echo json_encode(["status" => "error", "message" => "Data tidak lengkap!"]);
+    http_response_code(400);
+    echo json_encode([
+        "success" => false,
+        "message" => "Data tidak lengkap!"
+    ]);
 }
 ?>
